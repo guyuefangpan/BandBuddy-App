@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.bandbuddy.bandbuddy_app"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler 需 SDK 37；显式指定（本机已安装 android-37.0）
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
