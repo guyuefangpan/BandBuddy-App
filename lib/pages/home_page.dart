@@ -5,8 +5,9 @@ import '../providers/resource_provider.dart';
 import '../widgets/category_chips.dart';
 import '../widgets/resource_card.dart';
 import 'resource_detail_page.dart';
+import 'search_page.dart';
 
-/// Tab1 首页：资源发现流（型号分类 + 类型筛选 + 分页）
+/// 发现页：资源发现流（型号分类 + 类型筛选 + 排序 + 分页；右上角搜索入口）
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -54,6 +55,17 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
         title: const Text('米环资源大全',
             style: TextStyle(fontWeight: FontWeight.w700)),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: '搜索',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const SearchPage(),
+              ));
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
