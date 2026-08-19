@@ -39,6 +39,12 @@ class AppConfig {
 
   /// 资源类型标签（用于筛选）
   static const List<String> typeTags = ['全部', '表盘', '小程序', '固件', '工具', '教程'];
+
+  // ===== 应用版本与更新 =====
+  /// 当前版本号（每次发版同步更新；用于检查更新）
+  static const String appVersion = '1.1.4';
+  /// 默认更新源仓库（owner/repo，可在设置中修改）
+  static const String defaultUpdateRepo = 'guyuefangpan/BandBuddy-App';
 }
 
 class ResourceCategory {
