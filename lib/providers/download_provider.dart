@@ -26,6 +26,19 @@ class DownloadProvider extends ChangeNotifier {
   bool isDownloading(String key) => _downloading.contains(key);
   double progressOf(String key) => _progress[key] ?? 0;
 
+  /// 是否已下载过（有实际保存文件的历史记录；排除"浏览器打开"记录）
+  bool isDownloaded(BandResource r) {
+    final key = '${r.source}:${r.sourceId}';
+    return history.any((h) {
+      final src = h['source']?.toString() ?? '';
+      final sid = h['sourceId']?.toString() ?? '';
+      final path = h['filePath']?.toString() ?? '';
+      return '$src:$sid' == key &&
+          path.isNotEmpty &&
+          path != '浏览器打开';
+    });
+  }
+
   Future<void> loadHistory() async {
     try {
       history = await LocalDb.instance.getDownloadHistory();
