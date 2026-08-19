@@ -6,6 +6,7 @@ import '../core/config.dart';
 import '../core/services/update_service.dart';
 import '../providers/bandbbs_session_provider.dart';
 import '../providers/settings_provider.dart';
+import 'authkey_page.dart';
 import 'bandbbs_login_page.dart';
 import 'download_history_page.dart';
 
@@ -119,6 +120,37 @@ class SettingsPage extends StatelessWidget {
             subtitle: const Text('3675711（点击复制）'),
             onTap: () => _copyText(context, '3675711', 'QQ 号已复制：3675711'),
           ),
+          const Divider(),
+          // ===== 偏好设置 =====
+          _sectionTitle('偏好设置', context),
+          ListTile(
+            leading: const Icon(Icons.text_fields),
+            title: const Text('字体大小'),
+            trailing: SegmentedButton<double>(
+              segments: const [
+                ButtonSegment(value: 0.9, label: Text('小')),
+                ButtonSegment(value: 1.0, label: Text('标准')),
+                ButtonSegment(value: 1.15, label: Text('大')),
+              ],
+              selected: {s.fontScale},
+              onSelectionChanged: (v) => s.setFontScale(v.first),
+              showSelectedIcon: false,
+              style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.key),
+            title: const Text('手环 AuthKey'),
+            subtitle: const Text('获取手环蓝牙密钥（蓝牙直装的第一步）'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const AuthKeyPage(),
+            )),
+          ),
+
           const Divider(),
           // ===== 更新 =====
           _sectionTitle('更新', context),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/config.dart';
 import '../providers/resource_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/resource_card.dart';
 import 'resource_detail_page.dart';
 
@@ -43,6 +44,10 @@ class _SearchPageState extends State<SearchPage> {
     FocusScope.of(context).unfocus();
     if (!mounted) return;
     setState(() => _searched = true);
+    // 记录搜索历史
+    if (kw.isNotEmpty) {
+      context.read<SettingsProvider>().addSearchHistory(kw);
+    }
     final rp = context.read<ResourceProvider>();
     await rp.search(keyword: kw, categoryId: _categoryId, typeTag: _typeTag);
   }
@@ -225,6 +230,7 @@ class _SearchPageState extends State<SearchPage> {
         final r = rp.resources[i];
         return ResourceCard(
           resource: r,
+          highlightKeyword: _ctrl.text.trim(),
           onTap: () => Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => ResourceDetailPage(resource: r),
           )),
@@ -235,6 +241,8 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _searchHint() {
     final scheme = Theme.of(context).colorScheme;
+    final settings = context.watch<SettingsProvider>();
+    final history = settings.searchHistory;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -262,6 +270,42 @@ class _SearchPageState extends State<SearchPage> {
                 );
               }).toList(),
             ),
+            // 搜索历史
+            if (history.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('搜索历史',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant)),
+                  TextButton(
+                    onPressed: () async {
+                      await settings.clearSearchHistory();
+                    },
+                    child: const Text('清空', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: history.map((k) {
+                  return InputChip(
+                    label: Text(k, style: const TextStyle(fontSize: 12)),
+                    onPressed: () {
+                      _ctrl.text = k;
+                      _search(immediate: true);
+                    },
+                    deleteIcon: const Icon(Icons.history, size: 16),
+                    onDeleted: null,
+                  );
+                }).toList(),
+              ),
+            ],
           ],
         ),
       ),
