@@ -8,6 +8,7 @@ import '../providers/bandbbs_session_provider.dart';
 import '../providers/settings_provider.dart';
 import 'authkey_page.dart';
 import 'bandbbs_login_page.dart';
+import 'ble_install_page.dart';
 import 'download_history_page.dart';
 
 /// Tab4 我的：米坛登录（应用内账号登录）/ 数据源管理 / 关于
@@ -148,6 +149,15 @@ class SettingsPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
               builder: (_) => const AuthKeyPage(),
+            )),
+          ),
+          ListTile(
+            leading: const Icon(Icons.bluetooth),
+            title: const Text('蓝牙直装'),
+            subtitle: const Text('连接手环，直接安装表盘/小程序（无需电脑）'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const BleInstallPage(),
             )),
           ),
 
