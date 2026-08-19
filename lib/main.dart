@@ -25,25 +25,33 @@ class BandBuddyApp extends StatelessWidget {
             create: (ctx) => ResourceProvider(ctx.read<SettingsProvider>())),
         ChangeNotifierProvider(create: (_) => DownloadProvider()),
       ],
-      child: MaterialApp(
-        title: '米环资源大全',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF3B82F6),
-            brightness: Brightness.light,
+      child: Consumer<SettingsProvider>(
+        builder: (context, s, _) => MaterialApp(
+          title: '米环资源大全',
+          debugShowCheckedModeBanner: false,
+          // 全局字体缩放（设置 → 字体调节）
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(s.fontScale)),
+            child: child ?? const SizedBox.shrink(),
           ),
-          useMaterial3: true,
-          appBarTheme: const AppBarTheme(centerTitle: false),
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF3B82F6),
-            brightness: Brightness.dark,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF3B82F6),
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+            appBarTheme: const AppBarTheme(centerTitle: false),
           ),
-          useMaterial3: true,
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF3B82F6),
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          home: const MainShell(),
         ),
-        home: const MainShell(),
       ),
     );
   }
