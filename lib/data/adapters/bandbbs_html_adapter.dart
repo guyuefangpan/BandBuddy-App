@@ -27,6 +27,7 @@ class BandBbsHtmlAdapter implements ResourceAdapter {
     String? categoryId,
     int page = 1,
     String? keyword,
+    String? order,
   }) {
     final cat = AppConfig.categories.firstWhere(
       (c) => c.id == categoryId,
@@ -39,8 +40,9 @@ class BandBbsHtmlAdapter implements ResourceAdapter {
     } else {
       buf.write('/resources/?page=$page');
     }
-    if (order != null && order!.isNotEmpty) {
-      buf.write('&order=$order');
+    final effectiveOrder = order ?? this.order;
+    if (effectiveOrder != null && effectiveOrder.isNotEmpty) {
+      buf.write('&order=$effectiveOrder');
     }
     if (keyword != null && keyword.isNotEmpty) {
       buf.write('&q=${Uri.encodeQueryComponent(keyword)}');
@@ -60,35 +62,57 @@ class BandBbsHtmlAdapter implements ResourceAdapter {
     return parseList(resp.data ?? '');
   }
 
-  /// 客户端聚合搜索：抓取目标分类的前几页列表，本地按关键词/类型过滤
-  /// （米坛站内搜索要求登录，游客不可用；改用列表多页抓取 + 本地过滤）
+  /// 客户端聚合搜索（学习 OronBox 服务端搜索思路，无服务器下的近似实现）
+  /// - 覆盖范围：跨多个分类 + 多个排序并发抓取列表（最新/推荐），去重后客户端匹配
+  /// - 匹配字段：标题 / 作者 / 描述 / 设备型号 / 分类标签
+  /// - 米坛站内搜索需登录且 API Key 拿不到，无服务器下只能这样覆盖大部分资源
   Future<List<BandResource>> fetchSearch({
     String? keyword,
     String? categoryId,
     String? typeTag,
-    int maxPages = 3,
+    int pagesPerSource = 4,
   }) async {
-    final all = <BandResource>[];
-    final seen = <String>{};
-    for (var p = 1; p <= maxPages; p++) {
-      try {
-        final url = _listUrl(categoryId: categoryId, page: p);
-        final resp = await Http.getHtml(url);
-        final items = parseList(resp.data ?? '');
-        if (items.isEmpty) break;
-        for (final r in items) {
-          if (seen.add(r.uniqueKey)) all.add(r);
+    // 默认覆盖的型号分类（当用户选"全部"时）：覆盖大部分资源
+    const defaultCats = ['all', 'band10', 'band9', 'band8', 'band7', 'band6'];
+    final catIds = (categoryId == null ||
+            categoryId.isEmpty ||
+            categoryId == 'all')
+        ? defaultCats
+        : [categoryId];
+    // 排序：最新 + 推荐（两个排序都抓，覆盖不同维度的资源）
+    const orders = ['latest', 'rating_weighted'];
+
+    // 构造所有 (分类 × 排序 × 页) 的抓取任务
+    final tasks = <({String catId, int page, String order})>[];
+    for (final c in catIds) {
+      for (final o in orders) {
+        for (var p = 1; p <= pagesPerSource; p++) {
+          tasks.add((catId: c, page: p, order: o));
         }
-      } catch (_) {
-        break;
       }
     }
-    // 本地过滤
+
+    // 分批并发抓取（限制并发数避免被站点限流）
+    final all = <BandResource>[];
+    final seen = <String>{};
+    const concurrency = 4;
+    for (var i = 0; i < tasks.length; i += concurrency) {
+      final batch = tasks.skip(i).take(concurrency);
+      final results = await Future.wait(batch.map(_fetchOne));
+      for (final list in results) {
+        for (final r in list) {
+          if (seen.add(r.uniqueKey)) all.add(r);
+        }
+      }
+    }
+
+    // 本地过滤：关键词匹配（标题/作者/描述/分类/型号），类型筛选
     final kw = (keyword ?? '').trim().toLowerCase();
     final wantType = (typeTag ?? '全部').trim();
     return all.where((r) {
       if (kw.isNotEmpty) {
-        final hay = '${r.title} ${r.author} ${r.description}'
+        final hay = '${r.title} ${r.author} ${r.description} '
+                '${r.category} ${r.deviceModel ?? ''}'
             .toLowerCase();
         if (!hay.contains(kw)) return false;
       }
@@ -99,6 +123,17 @@ class BandBbsHtmlAdapter implements ResourceAdapter {
       }
       return true;
     }).toList();
+  }
+
+  Future<List<BandResource>> _fetchOne(
+      ({String catId, int page, String order}) t) async {
+    try {
+      final url = _listUrl(categoryId: t.catId, page: t.page, order: t.order);
+      final resp = await Http.getHtml(url);
+      return parseList(resp.data ?? '');
+    } catch (_) {
+      return <BandResource>[];
+    }
   }
 
   /// 解析资源列表页 HTML（公开以便测试）
