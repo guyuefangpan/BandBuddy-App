@@ -10,6 +10,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _useBandBbs = true;
   bool _useGitHub = true;
   String _githubRepos = AppConfig.defaultGitHubRepos.join(',');
+  String _updateRepo = AppConfig.defaultUpdateRepo;
 
   bool get useHtmlFallback => _useHtmlFallback;
   bool get useBandBbs => _useBandBbs;
@@ -19,6 +20,7 @@ class SettingsProvider extends ChangeNotifier {
       .map((s) => s.trim())
       .where((s) => s.isNotEmpty)
       .toList();
+  String get updateRepo => _updateRepo.trim();
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -27,6 +29,11 @@ class SettingsProvider extends ChangeNotifier {
     _useGitHub = _prefs?.getBool('use_github') ?? true;
     _githubRepos = _prefs?.getString('github_repos') ??
         AppConfig.defaultGitHubRepos.join(',');
+    // 更新源：未设置或曾存过空值时回退到默认仓库
+    final storedRepo = _prefs?.getString('update_repo') ?? '';
+    _updateRepo = storedRepo.trim().isEmpty
+        ? AppConfig.defaultUpdateRepo
+        : storedRepo.trim();
     notifyListeners();
   }
 
@@ -51,6 +58,12 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> setGithubRepos(String repos) async {
     _githubRepos = repos.trim();
     await _prefs?.setString('github_repos', _githubRepos);
+    notifyListeners();
+  }
+
+  Future<void> setUpdateRepo(String repo) async {
+    _updateRepo = repo.trim();
+    await _prefs?.setString('update_repo', _updateRepo);
     notifyListeners();
   }
 }
