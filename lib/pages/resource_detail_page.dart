@@ -5,6 +5,7 @@ import '../core/models/band_resource.dart';
 import '../providers/download_provider.dart';
 import '../providers/resource_provider.dart';
 import 'bandbbs_login_page.dart';
+import 'image_viewer_page.dart';
 
 /// 资源详情页：完整描述 / 预览图 / 版本 / 下载 / 分享
 class ResourceDetailPage extends StatefulWidget {
@@ -197,7 +198,7 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
             ),
           ],
           const SizedBox(height: 20),
-          // 预览图（详情页正文图片）
+          // 预览图（详情页正文图片，点击放大）
           if (_resource.previewImages.isNotEmpty) ...[
             const Text('资源预览',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
@@ -210,40 +211,46 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
                   final url = _resource.previewImages[i];
-                  return ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      url,
-                      width: 150,
-                      height: 150,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
+                  return GestureDetector(
+                    onTap: () => _openImageViewer(i),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.network(
+                        url,
                         width: 150,
                         height: 150,
-                        color: scheme.surfaceContainerHighest,
-                        child: Icon(Icons.broken_image_outlined,
-                            color: scheme.outline),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: 150,
+                          height: 150,
+                          color: scheme.surfaceContainerHighest,
+                          child: Icon(Icons.broken_image_outlined,
+                              color: scheme.outline),
+                        ),
+                        loadingBuilder: (_, child, progress) =>
+                            progress == null
+                                ? child
+                                : Container(
+                                    width: 150,
+                                    height: 150,
+                                    color: scheme.surfaceContainerHighest,
+                                    child: const Center(
+                                        child: SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                                strokeWidth: 2))),
+                                  ),
                       ),
-                      loadingBuilder: (_, child, progress) =>
-                          progress == null
-                              ? child
-                              : Container(
-                                  width: 150,
-                                  height: 150,
-                                  color: scheme.surfaceContainerHighest,
-                                  child: const Center(
-                                      child: SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2))),
-                                ),
                     ),
                   );
                 },
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 6),
+            Text('点击预览图可放大查看',
+                style: TextStyle(fontSize: 11, color: scheme.outline)),
+            const SizedBox(height: 10),
           ],
           const Text('资源描述',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
@@ -299,6 +306,30 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
     }
   }
 
+  /// 打开全屏图片查看器（从预览图 index 开始）
+  void _openImageViewer(int index) {
+    if (_resource.previewImages.isEmpty) return;
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ImageViewerPage(
+        images: _resource.previewImages,
+        initialIndex: index,
+      ),
+    ));
+  }
+
+  /// 封面图点击放大（若也在预览图中则从对应位置开始）
+  void _openCoverViewer() {
+    final cover = _resource.coverUrl;
+    if (cover == null || cover.isEmpty) return;
+    final idx = _resource.previewImages.indexOf(cover);
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => ImageViewerPage(
+        images: idx >= 0 ? _resource.previewImages : [cover],
+        initialIndex: idx >= 0 ? idx : 0,
+      ),
+    ));
+  }
+
   Widget _cover(ColorScheme scheme) {
     final url = _resource.coverUrl;
     if (url == null || url.isEmpty) {
@@ -312,18 +343,21 @@ class _ResourceDetailPageState extends State<ResourceDetailPage> {
         child: Icon(Icons.watch, size: 34, color: scheme.onPrimaryContainer),
       );
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.network(
-        url,
-        width: 72,
-        height: 72,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+    return GestureDetector(
+      onTap: _openCoverViewer,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          url,
           width: 72,
           height: 72,
-          color: scheme.surfaceContainerHighest,
-          child: Icon(Icons.watch, color: scheme.outline),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            width: 72,
+            height: 72,
+            color: scheme.surfaceContainerHighest,
+            child: Icon(Icons.watch, color: scheme.outline),
+          ),
         ),
       ),
     );

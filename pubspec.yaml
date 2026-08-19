@@ -4,7 +4,7 @@ publish_to: 'none'
 # 版本格式：<versionName>+<versionCode>
 # versionName 须与 lib/core/config.dart 的 AppConfig.appVersion、GitHub Releases tag 一致；
 # versionCode 每次发版必须递增（Android 按它判断新旧，不变会导致无法覆盖安装）
-version: 1.1.4+14
+version: 1.1.5+15
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
