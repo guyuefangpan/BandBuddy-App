@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/models/band_resource.dart';
+import '../providers/download_provider.dart';
 
-/// 资源卡片：封面 + 标题 + 彩色类型标签 + 作者 + 来源 + 更新时间
+/// 资源卡片：封面 + 标题 + 彩色类型标签 + 作者 + 来源 + 更新时间 + 已下载标记
 class ResourceCard extends StatelessWidget {
   final BandResource resource;
   final VoidCallback? onTap;
+  final String? highlightKeyword; // 搜索命中词高亮（搜索页使用）
 
-  const ResourceCard({super.key, required this.resource, this.onTap});
+  const ResourceCard({
+    super.key,
+    required this.resource,
+    this.onTap,
+    this.highlightKeyword,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final version = resource.version ?? '';
+    final downloaded = context.watch<DownloadProvider>().isDownloaded(resource);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       clipBehavior: Clip.antiAlias,
@@ -22,7 +31,7 @@ class ResourceCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _cover(scheme),
+              _cover(scheme, downloaded),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -32,14 +41,13 @@ class ResourceCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Flexible(
-                          child: Text(
-                            resource.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.w600),
-                          ),
+                          child: _title(context),
                         ),
+                        if (downloaded) ...[
+                          const SizedBox(width: 6),
+                          Icon(Icons.download_done,
+                              size: 15, color: Colors.green.shade600),
+                        ],
                         if (resource.category.isNotEmpty) ...[
                           const SizedBox(width: 6),
                           _TypeBadge(category: resource.category),
@@ -93,10 +101,11 @@ class ResourceCard extends StatelessWidget {
     );
   }
 
-  Widget _cover(ColorScheme scheme) {
+  Widget _cover(ColorScheme scheme, bool downloaded) {
     final url = resource.coverUrl;
+    Widget child;
     if (url == null || url.isEmpty) {
-      return Container(
+      child = Container(
         width: 56,
         height: 56,
         decoration: BoxDecoration(
@@ -105,21 +114,73 @@ class ResourceCard extends StatelessWidget {
         ),
         child: Icon(Icons.watch, color: scheme.onPrimaryContainer),
       );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Image.network(
-        url,
-        width: 56,
-        height: 56,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+    } else {
+      child = ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.network(
+          url,
           width: 56,
           height: 56,
-          color: scheme.surfaceContainerHighest,
-          child: Icon(Icons.watch, color: scheme.outline),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(
+            width: 56,
+            height: 56,
+            color: scheme.surfaceContainerHighest,
+            child: Icon(Icons.watch, color: scheme.outline),
+          ),
         ),
+      );
+    }
+    if (!downloaded) return child;
+    // 已下载：右下角小绿勾
+    return Stack(
+      children: [
+        child,
+        Positioned(
+          right: 2,
+          bottom: 2,
+          child: Container(
+            padding: const EdgeInsets.all(2),
+            decoration: BoxDecoration(
+              color: Colors.green.shade600,
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.surface, width: 1),
+            ),
+            child: const Icon(Icons.check, size: 10, color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 标题（支持搜索关键词高亮）
+  Widget _title(BuildContext context) {
+    final kw = highlightKeyword?.trim();
+    final style = const TextStyle(fontSize: 15, fontWeight: FontWeight.w600);
+    if (kw == null || kw.isEmpty) {
+      return Text(resource.title,
+          maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
+    }
+    final title = resource.title;
+    final idx = title.toLowerCase().indexOf(kw.toLowerCase());
+    if (idx < 0) {
+      return Text(resource.title,
+          maxLines: 1, overflow: TextOverflow.ellipsis, style: style);
+    }
+    final hlColor = Theme.of(context).colorScheme.primary;
+    return Text.rich(
+      TextSpan(
+        style: style,
+        children: [
+          TextSpan(text: title.substring(0, idx)),
+          TextSpan(
+              text: title.substring(idx, idx + kw.length),
+              style: TextStyle(color: hlColor, fontWeight: FontWeight.w800)),
+          TextSpan(text: title.substring(idx + kw.length)),
+        ],
       ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 
