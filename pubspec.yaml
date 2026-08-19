@@ -4,7 +4,7 @@ publish_to: 'none'
 # 版本格式：<versionName>+<versionCode>
 # versionName 须与 lib/core/config.dart 的 AppConfig.appVersion、GitHub Releases tag 一致；
 # versionCode 每次发版必须递增（Android 按它判断新旧，不变会导致无法覆盖安装）
-version: 1.1.6+16
+version: 1.1.7+17
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -25,6 +25,11 @@ dependencies:
   flutter_file_dialog: ^3.3.2
   open_filex: ^4.7.0
   permission_handler: ^13.0.1
+  flutter_blue_plus: ^2.3.12
+  pointycastle: ^4.0.0
+  archive: ^4.1.0
+  crypto: ^3.0.7
+  file_selector: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
