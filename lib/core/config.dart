@@ -42,7 +42,7 @@ class AppConfig {
 
   // ===== 应用版本与更新 =====
   /// 当前版本号（每次发版同步更新；用于检查更新）
-  static const String appVersion = '1.1.6';
+  static const String appVersion = '1.1.7';
   /// 默认更新源仓库（owner/repo，可在设置中修改）
   static const String defaultUpdateRepo = 'guyuefangpan/BandBuddy-App';
 }
