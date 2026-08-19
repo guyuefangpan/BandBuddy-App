@@ -1,4 +1,5 @@
 // 基础冒烟测试：验证应用主框架能正常构建
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,9 +14,10 @@ void main() {
   testWidgets('App builds and shows main shell', (WidgetTester tester) async {
     await tester.pumpWidget(const BandBuddyApp());
     await tester.pump(const Duration(milliseconds: 500));
-    // 主框架存在：底部导航有 3 个 Tab（收藏已移除）
+    // 主框架存在：底部导航有 2 个 Tab（搜索已移至发现页右上角）
     expect(find.text('发现'), findsOneWidget);
-    expect(find.text('搜索'), findsOneWidget);
     expect(find.text('我的'), findsOneWidget);
+    // 发现页右上角有搜索按钮
+    expect(find.byIcon(Icons.search), findsWidgets);
   });
 }
