@@ -1,7 +1,10 @@
 name: bandbuddy_app
 description: 米环资源大全 - 聚合米坛社区(BandBBS)等来源的小米手环第三方资源
 publish_to: 'none'
-version: 1.0.0+1
+# 版本格式：<versionName>+<versionCode>
+# versionName 须与 lib/core/config.dart 的 AppConfig.appVersion、GitHub Releases tag 一致；
+# versionCode 每次发版必须递增（Android 按它判断新旧，不变会导致无法覆盖安装）
+version: 1.1.4+14
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -20,6 +23,7 @@ dependencies:
   url_launcher: ^6.3.0
   webview_flutter: ^4.14.1
   flutter_file_dialog: ^3.3.2
+  open_filex: ^4.7.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
