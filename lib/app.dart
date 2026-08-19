@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
-import 'pages/search_page.dart';
 import 'pages/settings_page.dart';
 
-/// App 主框架：底部 3 Tab 导航（收藏已移除）
+/// App 主框架：底部 2 Tab 导航（搜索已移至发现页右上角按钮）
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
 
@@ -16,7 +15,6 @@ class _MainShellState extends State<MainShell> {
 
   static const _pages = [
     HomePage(),
-    SearchPage(),
     SettingsPage(),
   ];
 
@@ -32,8 +30,6 @@ class _MainShellState extends State<MainShell> {
               icon: Icon(Icons.explore_outlined),
               selectedIcon: Icon(Icons.explore),
               label: '发现'),
-          NavigationDestination(
-              icon: Icon(Icons.search), label: '搜索'),
           NavigationDestination(
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person),
